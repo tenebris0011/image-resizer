@@ -29,7 +29,9 @@ def resize_images(uploaded):
             resized_im = im.resize((round(im.size[0]*size), round(im.size[1]*size)))
             resized_im.save("./resized/" + new_file_name)
             resized_im.save("./resized/" + new_file_name + ".webp", format="webp")
-    shutil.make_archive(st.session_state['session_key'], 'zip', "./resized")
+    if not os.path.exists('./output'):
+        os.makedirs('./output')
+    shutil.make_archive(f"./output/{st.session_state['session_key']}", 'zip', "./resized")
     st.session_state['session_zip_file'] = st.session_state['session_key'] + ".zip"
 
 
@@ -41,9 +43,9 @@ def save_uploadedfile(uploadedfile):
         if os.path.exists(os.path.join("./images",uploadedfile.name)):
            return str(os.path.join("./images",uploadedfile.name))
     return False
-    
-uploaded = []
+
 st.title("Image Resizer")
+st.caption("Resize and generate webp images for all of your image files.")
 
 if 'session_key' not in st.session_state:
     st.session_state['session_key'] = ''.join(random.choices(string.ascii_lowercase, k=5))
@@ -56,8 +58,8 @@ for uploaded_file in uploaded_files:
 
 st.button('Resize', key=None, help=None, on_click=resize_images, args=(uploaded_files,), disabled=False)
 
-if os.path.exists(st.session_state['session_zip_file']):
-    with open(st.session_state['session_zip_file'], "rb") as fp:
+if os.path.exists(f"./output/{st.session_state['session_zip_file']}"):
+    with open(f"./output/{st.session_state['session_zip_file']}", "rb") as fp:
         btn = st.download_button(
             label="Download Resized Images ZIP",
             data=fp,
