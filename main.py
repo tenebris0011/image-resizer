@@ -42,9 +42,6 @@ def save_uploadedfile(uploadedfile):
         if os.path.exists(os.path.join("./images",uploadedfile.name)):
            return str(os.path.join("./images",uploadedfile.name))
     return False
-
-def delete_downloaded_file(filepath):
-    st.write(filepath)
     
 uploaded = []
 st.title("Image Resizer")
