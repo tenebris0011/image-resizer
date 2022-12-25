@@ -44,6 +44,14 @@ def save_uploadedfile(uploadedfile):
            return str(os.path.join("./images",uploadedfile.name))
     return False
 
+def clean_up():
+    for file in ('./images'):
+        os.remove('./images/' + file)
+    for file in ('./resized'):
+        os.remove('./resized/' + file)
+    for file in ('./output'):
+        os.remove('./output/' + file)
+
 st.title("Image Resizer")
 st.caption("Resize and generate webp images for all of your image files.")
 
@@ -57,6 +65,7 @@ for uploaded_file in uploaded_files:
     file_path = save_uploadedfile(uploaded_file)
 
 st.button('Resize', key=None, help=None, on_click=resize_images, args=(uploaded_files,), disabled=False)
+st.button('Clean Up Files', key=None, help=None, on_click=clean_up, disabled=False)
 
 if os.path.exists(f"./output/{st.session_state['session_zip_file']}"):
     with open(f"./output/{st.session_state['session_zip_file']}", "rb") as fp:
