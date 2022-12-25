@@ -45,11 +45,11 @@ def save_uploadedfile(uploadedfile):
     return False
 
 def clean_up():
-    for file in ('./images'):
+    for file in os.listdir('./images'):
         os.remove('./images/' + file)
-    for file in ('./resized'):
+    for file in os.listdir('./resized'):
         os.remove('./resized/' + file)
-    for file in ('./output'):
+    for file in os.listdir('./output'):
         os.remove('./output/' + file)
 
 st.title("Image Resizer")
