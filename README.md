@@ -8,5 +8,4 @@ When trying to serve the proper images for websites I am designing, I always fin
 
 ## To Do
 - Add extension selector.
-- Redesign GUI.
-- Add a way to see current status of conversion.
+- GUI optimizations.

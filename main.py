@@ -1,32 +1,19 @@
-import tkinter
-import customtkinter
+import streamlit as st
 from PIL import Image
 import os
+import shutil
+import random
+import string
 
-customtkinter.set_appearance_mode("System")  # Modes: system (default), light, dark
-customtkinter.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
-
-app = customtkinter.CTk()  # create CTk window like you do with the Tk window
-app.geometry("350x150")
-extensions = []
-
-def checkbox_event():
-    extensions.append(check_var.get())
-
-
-def resize_images():
-    input_dir = input_entry.get()
-    output_dir = output_entry.get()
-    size = len(os.listdir(input_dir))
-    allowed_extension = ['jpg','tiff','jpeg','png']
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    for image in os.listdir(input_dir):
-        if image.split('.')[1] not in allowed_extension:
-            continue
+def resize_images(uploaded):
+    if not os.path.exists('./resized'):
+        os.makedirs('./resized')
+    file_list = []
+    for uploaded_file in uploaded_files:
+        file_list.append(uploaded_file.name)
+    for image in file_list:
         #Create an Image Object from an Image
-        im = Image.open(input_dir + "/" + image)
+        im = Image.open("./images/" + image)
         for percentage in range(25, 100, 25):
             size = percentage/100
 
@@ -40,51 +27,42 @@ def resize_images():
             new_file_name = file_name + "_" + str(width) + "x" + str(height) + "." + file_ext
             #Make the new image half the width and half the height of the original image
             resized_im = im.resize((round(im.size[0]*size), round(im.size[1]*size)))
-            resized_im.save(output_dir + "/" + new_file_name, format=file_ext)
-            resized_im.save(output_dir + "/" + new_file_name + ".webp", format="webp")
-    label.configure(text="Image resizing completed.")
+            resized_im.save("./resized/" + new_file_name)
+            resized_im.save("./resized/" + new_file_name + ".webp", format="webp")
+    if not os.path.exists('./output'):
+        os.makedirs('./output')
+    shutil.make_archive(f"./output/{st.session_state['session_key']}", 'zip', "./resized")
+    st.session_state['session_zip_file'] = st.session_state['session_key'] + ".zip"
 
-# Use CTkButton instead of tkinter Button
-button = customtkinter.CTkButton(master=app, 
-                               text="Resize", 
-                               command=resize_images, 
-                               width=120,
-                               height=25,
-                               border_width=2,
-                               corner_radius=10)
-input_entry = customtkinter.CTkEntry(master=app,
-                               placeholder_text="Input Folder",
-                               width=120,
-                               height=25,
-                               border_width=2,
-                               corner_radius=10)
-input_label = customtkinter.CTkLabel(master=app,
-                               text="Input Folder",
-                               width=120,
-                               height=25)
-input_label.grid(row=0, column=0)
-input_entry.grid(row=1, column=0)
 
-output_entry = customtkinter.CTkEntry(master=app,
-                               placeholder_text="Output Folder",
-                               width=120,
-                               height=25,
-                               border_width=2,
-                               corner_radius=10)
-output_label = customtkinter.CTkLabel(master=app,
-                               text="Output Folder",
-                               width=120,
-                               height=25)
+def save_uploadedfile(uploadedfile):
+    if not os.path.exists('./images'):
+        os.makedirs('./images')
+    with open(os.path.join("./images",uploadedfile.name),"wb") as f:
+        f.write(uploadedfile.getbuffer())
+        if os.path.exists(os.path.join("./images",uploadedfile.name)):
+           return str(os.path.join("./images",uploadedfile.name))
+    return False
 
-output_label.grid(row=3, column=0)
-output_entry.grid(row=4, column=0)
-button.grid(row=4, column=1)
+st.title("Image Resizer")
+st.caption("Resize and generate webp images for all of your image files.")
 
-label = customtkinter.CTkLabel(master=app,
-                               text='',
-                               width=120,
-                               height=25,
-                               corner_radius=8)
-label.grid(row=1, column=1)
+if 'session_key' not in st.session_state:
+    st.session_state['session_key'] = ''.join(random.choices(string.ascii_lowercase, k=5))
+    st.session_state['session_zip_file'] = st.session_state['session_key'] + ".zip"
 
-app.mainloop()
+uploaded_files = st.file_uploader("Choose a image file", accept_multiple_files=True)
+
+for uploaded_file in uploaded_files:
+    file_path = save_uploadedfile(uploaded_file)
+
+st.button('Resize', key=None, help=None, on_click=resize_images, args=(uploaded_files,), disabled=False)
+
+if os.path.exists(f"./output/{st.session_state['session_zip_file']}"):
+    with open(f"./output/{st.session_state['session_zip_file']}", "rb") as fp:
+        btn = st.download_button(
+            label="Download Resized Images ZIP",
+            data=fp,
+            file_name=st.session_state['session_zip_file'],
+            mime="application/zip"
+        )
